@@ -20,6 +20,7 @@ data class PlayOptions(
     val audioStreamIndex: Int?,
     val subtitleStreamIndex: Int?,
     val playFromDownloads: Boolean?,
+    val maxStreamingBitrate: Int?,
 ) : Parcelable {
     companion object {
         fun fromJson(json: JSONObject): PlayOptions? = try {
@@ -37,6 +38,9 @@ data class PlayOptions(
                 audioStreamIndex = json.optString("audioStreamIndex").toIntOrNull(),
                 subtitleStreamIndex = json.optString("subtitleStreamIndex").toIntOrNull(),
                 playFromDownloads = false,
+                maxStreamingBitrate = json.optInt("maxBitrate").takeIf { it > 0 }
+                    ?: json.optInt("MaxStreamingBitrate").takeIf { it > 0 }
+                    ?: json.optInt("maxStreamingBitrate").takeIf { it > 0 },
             )
         } catch (e: JSONException) {
             Timber.e(e, "Failed to parse playback options: %s", json)

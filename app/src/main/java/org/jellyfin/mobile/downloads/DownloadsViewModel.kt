@@ -34,6 +34,7 @@ class DownloadsViewModel : ViewModel(), KoinComponent {
             audioStreamIndex = 1,
             subtitleStreamIndex = -1,
             playFromDownloads = true,
+            maxStreamingBitrate = null,
         )
         activityEventHandler.emit(ActivityEvent.LaunchNativePlayer(playOptions))
     }
