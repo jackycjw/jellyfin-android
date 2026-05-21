@@ -45,6 +45,7 @@ class SettingsFragment : Fragment(), BackPressInterceptor {
     private lateinit var backgroundAudioPreference: Preference
     private lateinit var directPlayAssPreference: Preference
     private lateinit var networkBufferPreference: Preference
+    private lateinit var defaultQualityPreference: Preference
     private lateinit var externalPlayerChoicePreference: Preference
 
     init {
@@ -111,6 +112,7 @@ class SettingsFragment : Fragment(), BackPressInterceptor {
                 backgroundAudioPreference.enabled = selection == VideoPlayerType.EXO_PLAYER
                 directPlayAssPreference.enabled = selection == VideoPlayerType.EXO_PLAYER
                 networkBufferPreference.enabled = selection == VideoPlayerType.EXO_PLAYER
+                defaultQualityPreference.enabled = selection == VideoPlayerType.EXO_PLAYER
                 externalPlayerChoicePreference.enabled = selection == VideoPlayerType.EXTERNAL_PLAYER
             }
         }
@@ -169,6 +171,29 @@ class SettingsFragment : Fragment(), BackPressInterceptor {
         networkBufferPreference = singleChoice(Constants.PREF_EXOPLAYER_NETWORK_BUFFER, networkBufferOptions) {
             titleRes = R.string.pref_exoplayer_network_buffer
             initialSelection = Constants.NETWORK_BUFFER_AUTO
+            enabled = appPreferences.videoPlayerType == VideoPlayerType.EXO_PLAYER
+        }
+
+        val qualityOptions = listOf(
+            SelectionItem("120000000", R.string.quality_4k_120mbps, 0),
+            SelectionItem("80000000", R.string.quality_4k_80mbps, 0),
+            SelectionItem("60000000", R.string.quality_1080_60mbps, 0),
+            SelectionItem("40000000", R.string.quality_1080_40mbps, 0),
+            SelectionItem("20000000", R.string.quality_1080_20mbps, 0),
+            SelectionItem("15000000", R.string.quality_1080_15mbps, 0),
+            SelectionItem("10000000", R.string.quality_1080_10mbps, 0),
+            SelectionItem("8000000", R.string.quality_720_8mbps, 0),
+            SelectionItem("6000000", R.string.quality_720_6mbps, 0),
+            SelectionItem("4000000", R.string.quality_720_4mbps, 0),
+            SelectionItem("3000000", R.string.quality_480_3mbps, 0),
+            SelectionItem("1500000", R.string.quality_480_1_5mbps, 0),
+            SelectionItem("720000", R.string.quality_480_720kbps, 0),
+            SelectionItem("420000", R.string.quality_360_420kbps, 0),
+            SelectionItem("0", R.string.menu_item_auto, 0),
+        )
+        defaultQualityPreference = singleChoice(Constants.PREF_DEFAULT_MAX_BITRATE, qualityOptions) {
+            titleRes = R.string.pref_exoplayer_default_quality
+            initialSelection = "0"
             enabled = appPreferences.videoPlayerType == VideoPlayerType.EXO_PLAYER
         }
 

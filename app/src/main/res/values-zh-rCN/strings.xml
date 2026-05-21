@@ -145,4 +145,19 @@
     <string name="network_buffer_large_description">较大的缓冲区，可能有助于改善一般或不稳定的网络连接</string>
     <string name="network_buffer_extra_large">特大</string>
     <string name="network_buffer_extra_large_description">最大缓冲区，适用于慢速连接或卫星连接</string>
+    <string name="pref_exoplayer_default_quality">默认流媒体画质</string>
+    <string name="quality_4k_120mbps">4K - 120 Mbps</string>
+    <string name="quality_4k_80mbps">4K - 80 Mbps</string>
+    <string name="quality_1080_60mbps">1080p - 60 Mbps</string>
+    <string name="quality_1080_40mbps">1080p - 40 Mbps</string>
+    <string name="quality_1080_20mbps">1080p - 20 Mbps</string>
+    <string name="quality_1080_15mbps">1080p - 15 Mbps</string>
+    <string name="quality_1080_10mbps">1080p - 10 Mbps</string>
+    <string name="quality_720_8mbps">720p - 8 Mbps</string>
+    <string name="quality_720_6mbps">720p - 6 Mbps</string>
+    <string name="quality_720_4mbps">720p - 4 Mbps</string>
+    <string name="quality_480_3mbps">480p - 3 Mbps</string>
+    <string name="quality_480_1_5mbps">480p - 1.5 Mbps</string>
+    <string name="quality_480_720kbps">480p - 720 Kbps</string>
+    <string name="quality_360_420kbps">360p - 420 Kbps</string>
 </resources>

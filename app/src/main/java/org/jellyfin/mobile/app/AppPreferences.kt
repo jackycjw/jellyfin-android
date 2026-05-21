@@ -158,10 +158,10 @@ class AppPreferences(context: Context) {
         set(value) = sharedPreferences.edit { putString(Constants.PREF_EXTERNAL_PLAYER_APP, value) }
 
     var defaultMaxStreamingBitrate: Int?
-        get() = sharedPreferences.getInt(Constants.PREF_DEFAULT_MAX_BITRATE, -1).takeIf { it > 0 }
+        get() = sharedPreferences.getString(Constants.PREF_DEFAULT_MAX_BITRATE, null)?.toIntOrNull()?.takeIf { it > 0 }
         set(value) {
             sharedPreferences.edit {
-                if (value != null) putInt(Constants.PREF_DEFAULT_MAX_BITRATE, value)
+                if (value != null) putString(Constants.PREF_DEFAULT_MAX_BITRATE, value.toString())
                 else remove(Constants.PREF_DEFAULT_MAX_BITRATE)
             }
         }
