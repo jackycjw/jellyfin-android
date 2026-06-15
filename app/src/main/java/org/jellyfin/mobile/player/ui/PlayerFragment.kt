@@ -46,6 +46,7 @@ import org.jellyfin.mobile.utils.Constants.PIP_MAX_RATIONAL
 import org.jellyfin.mobile.utils.Constants.PIP_MIN_RATIONAL
 import org.jellyfin.mobile.utils.SmartOrientationListener
 import org.jellyfin.mobile.utils.brightness
+import org.jellyfin.mobile.utils.seekToOffset
 import org.jellyfin.mobile.utils.extensions.aspectRational
 import org.jellyfin.mobile.utils.extensions.getParcelableCompat
 import org.jellyfin.mobile.utils.extensions.isLandscape
@@ -60,7 +61,7 @@ import androidx.media3.ui.R as Media3R
 @Suppress("TooManyFunctions")
 class PlayerFragment : Fragment(), BackPressInterceptor {
     private val appPreferences: AppPreferences by inject()
-    private val viewModel: PlayerViewModel by viewModels()
+    internal val viewModel: PlayerViewModel by viewModels()
     private var _playerBinding: FragmentPlayerBinding? = null
     private val playerBinding: FragmentPlayerBinding get() = _playerBinding!!
     private val playerView: PlayerView get() = playerBinding.playerView
@@ -287,6 +288,10 @@ class PlayerFragment : Fragment(), BackPressInterceptor {
     fun onRewind() = viewModel.rewind()
 
     fun onFastForward() = viewModel.fastForward()
+
+    fun onSeekByOffset(offsetMs: Long) {
+        viewModel.playerOrNull?.seekToOffset(offsetMs)
+    }
 
     fun onPreviousChapter() = viewModel.previousChapter()
 
