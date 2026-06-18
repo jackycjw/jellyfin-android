@@ -101,31 +101,12 @@ class PlayerGestureHelper(
         playerView.context,
         object : GestureDetector.SimpleOnGestureListener() {
             override fun onDoubleTap(e: MotionEvent): Boolean {
-                val viewWidth = playerView.measuredWidth
-                val viewHeight = playerView.measuredHeight
-                val viewCenterX = viewWidth / 2
-                val viewCenterY = viewHeight / 2
-                val isFastForward = e.x.toInt() > viewCenterX
-
-                // Show ripple effect
-                playerView.foreground?.apply {
-                    val left = if (isFastForward) viewCenterX else 0
-                    val right = if (isFastForward) viewWidth else viewCenterX
-                    setBounds(left, viewCenterY - viewCenterX / 2, right, viewCenterY + viewCenterX / 2)
-                    setHotspot(e.x, e.y)
-                    state = intArrayOf(android.R.attr.state_enabled, android.R.attr.state_pressed)
-                    playerView.postDelayed(Constants.DOUBLE_TAP_RIPPLE_DURATION_MS) {
-                        state = IntArray(0)
-                    }
-                }
-
-                // Fast-forward/rewind
-                with(fragment) { if (isFastForward) onFastForward() else onRewind() }
-
-                // Cancel previous runnable to not hide controller while seeking
+                // Toggle play/pause on double-tap anywhere
+                val player = fragment.viewModel.playerOrNull ?: return false
+                if (player.isPlaying) fragment.viewModel.pause() else fragment.viewModel.play()
+                // Show controller briefly
+                playerView.showController()
                 playerView.removeCallbacks(hidePlayerViewControllerAction)
-
-                // Ensure controller gets hidden after seeking
                 playerView.postDelayed(hidePlayerViewControllerAction, Constants.DEFAULT_CONTROLS_TIMEOUT_MS.toLong())
                 return true
             }
@@ -189,10 +170,11 @@ class PlayerGestureHelper(
                 return when (currentGestureMode) {
                     GestureMode.SEEK -> {
                         totalHorizontalDistance += -distanceX
-                        val seekDelta = calculateSeekDelta(totalHorizontalDistance, playerView.measuredWidth.toFloat())
 
                         val player = fragment.viewModel.playerOrNull
                         val duration = player?.duration?.takeIf { it > 0 } ?: 0L
+                        val seekDelta = calculateSeekDelta(totalHorizontalDistance, playerView.measuredWidth.toFloat(), duration)
+
                         val targetMs = (seekStartPosition + seekDelta).coerceIn(0, if (duration > 0) duration else Long.MAX_VALUE)
 
                         showSeekIndicator(seekDelta, targetMs, duration)
@@ -288,7 +270,8 @@ class PlayerGestureHelper(
                 }
                 // Apply seek on horizontal swipe end
                 if (currentGestureMode == GestureMode.SEEK) {
-                    val seekDelta = calculateSeekDelta(totalHorizontalDistance, playerView.measuredWidth.toFloat())
+                    val duration = fragment.viewModel.playerOrNull?.duration?.takeIf { it > 0 } ?: 0L
+                    val seekDelta = calculateSeekDelta(totalHorizontalDistance, playerView.measuredWidth.toFloat(), duration)
                     fragment.onSeekByOffset(seekDelta)
                 }
                 // Hide gesture indicator after timeout, if shown
@@ -318,23 +301,13 @@ class PlayerGestureHelper(
     }
 
     /**
-     * Calculate seek delta with acceleration - the further you swipe, the faster it seeks.
-     * Inspired by MX Player and Bilibili:
-     *   1/4 screen → ~15s    (fine control)
-     *   1/2 screen → ~45s
-     *   full screen → ~120s  (2 min)
-     *   2 screens  → ~240s   (4 min)
+     * Calculate seek delta proportional to video duration (like progress bar dragging).
+     * Full screen width swipe = skips through the entire video.
      */
-    private fun calculateSeekDelta(totalDistance: Float, screenWidth: Float): Long {
-        val ratio = abs(totalDistance) / screenWidth
-        val seekSeconds = when {
-            ratio <= 0.25 -> ratio / 0.25f * 15
-            ratio <= 0.5 -> 15 + (ratio - 0.25f) / 0.25f * 30
-            ratio <= 1.0 -> 45 + (ratio - 0.5f) / 0.5f * 75
-            else -> 120 + (ratio - 1.0f) * 120
-        }
-        val deltaMs = (seekSeconds * 1000).toLong()
-        return if (totalDistance >= 0) deltaMs else -deltaMs
+    private fun calculateSeekDelta(totalDistance: Float, screenWidth: Float, durationMs: Long): Long {
+        if (durationMs <= 0) return 0L
+        val ratio = (totalDistance / screenWidth).coerceIn(-1f, 1f)
+        return (ratio * durationMs).toLong()
     }
 
     private fun showSeekIndicator(seekDeltaMs: Long, targetMs: Long, durationMs: Long) {
