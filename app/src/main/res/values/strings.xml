@@ -117,6 +117,8 @@
     <string name="network_buffer_large_description">Larger buffer, may help on moderate or variable connections</string>
     <string name="network_buffer_extra_large">Extra large</string>
     <string name="network_buffer_extra_large_description">Maximum buffer, intended for slow or satellite connections</string>
+    <string name="episode_picker_title">Episodes</string>
+    <string name="episode_picker_show_titles">Show titles</string>
     <string name="pref_exoplayer_default_quality">Default streaming quality</string>
     <string name="quality_4k_120mbps">4K - 120 Mbps</string>
     <string name="quality_4k_80mbps">4K - 80 Mbps</string>

@@ -13,6 +13,8 @@ import androidx.core.view.get
 import androidx.core.view.isVisible
 import androidx.core.view.size
 import androidx.core.view.updateLayoutParams
+import androidx.lifecycle.lifecycleScope
+import kotlinx.coroutines.launch
 import org.jellyfin.mobile.R
 import org.jellyfin.mobile.databinding.ExoPlayerControlViewBinding
 import org.jellyfin.mobile.databinding.FragmentPlayerBinding
@@ -22,9 +24,12 @@ import org.jellyfin.mobile.player.source.LocalJellyfinMediaSource
 import org.jellyfin.mobile.player.source.RemoteJellyfinMediaSource
 import org.jellyfin.mobile.player.ui.playermenuhelper.PlayerMenuHelper
 import org.jellyfin.mobile.player.ui.playermenuhelper.SkipMediaSegmentButton
+import org.jellyfin.sdk.api.client.ApiClient
+import org.jellyfin.sdk.model.api.BaseItemKind
 import org.jellyfin.sdk.model.api.ChapterInfo
 import org.jellyfin.sdk.model.api.MediaStream
 import org.koin.core.component.KoinComponent
+import org.koin.core.component.get
 import org.koin.core.component.inject
 import java.util.Locale
 
@@ -39,7 +44,9 @@ class PlayerMenus(
     KoinComponent {
 
     private val context = playerBinding.root.context
+    private val apiClient: ApiClient = get()
     private val qualityOptionsProvider: QualityOptionsProvider by inject()
+    private val episodesButton: View by playerControlsBinding::episodesButton
     private val playPauseContainer: View by playerControlsBinding::playPauseContainer
     private val previousButton: View by playerControlsBinding::previousButton
     private val nextButton: View by playerControlsBinding::nextButton
@@ -69,6 +76,10 @@ class PlayerMenus(
     )
 
     init {
+        episodesButton.setOnClickListener {
+            fragment.suppressControllerAutoHide(true)
+            showEpisodePicker()
+        }
         previousButton.setOnClickListener {
             fragment.onSkipToPrevious()
         }
@@ -128,6 +139,10 @@ class PlayerMenus(
     fun onQueueItemChanged(mediaSource: JellyfinMediaSource, hasNext: Boolean) {
         // previousButton is always enabled and will rewind if at the start of the queue
         nextButton.isEnabled = hasNext
+
+        // Show episodes button only for TV episodes with a season parent
+        val item = mediaSource.item
+        episodesButton.isVisible = item?.type == BaseItemKind.EPISODE && (item.seasonId != null || item.seriesId != null)
 
         val chapters = mediaSource.item?.chapters
         updateLayoutConstraints(!chapters.isNullOrEmpty())
@@ -391,6 +406,18 @@ class PlayerMenus(
         // Remove unnecessary trailing zeros
         val formatted = "%.2f".format(Locale.getDefault(), value).removeSuffix(".00")
         return formatted + unit
+    }
+
+    private fun showEpisodePicker() {
+        val currentItem = fragment.viewModel.mediaSourceOrNull?.item ?: return
+        val dialog = EpisodePickerDialog(currentItem) { playOptions ->
+            fragment.lifecycleScope.launch {
+                // Pause and report current stop, but keep player alive to avoid fragment pop
+                fragment.viewModel.pause()
+                fragment.viewModel.queueManager.initializePlaybackQueue(playOptions)
+            }
+        }
+        dialog.show(fragment.childFragmentManager, EpisodePickerDialog.TAG)
     }
 
     companion object {
